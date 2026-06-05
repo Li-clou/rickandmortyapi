@@ -1,0 +1,19 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "para que me deje usar el import en vez del require, tengo que poner esto",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rick & Morty Explorer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1923;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #141d27;
+      border-bottom: 2px solid #97ce4c;
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      color: #97ce4c;
+      letter-spacing: 1px;
+    }
+
+    .search-bar {
+      padding: 1.5rem 2rem 1rem;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .search-bar input {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #2e3f50;
+      background: #1c2b3a;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-bar input:focus { border-color: #97ce4c; }
+
+    .search-bar button {
+      padding: 0.6rem 1.4rem;
+      border-radius: 8px;
+      border: none;
+      background: #97ce4c;
+      color: #0f1923;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+    }
+
+    .search-bar button:hover { background: #b5e561; }
+
+    .info-bar {
+      padding: 0 2rem 0.5rem;
+      font-size: 0.85rem;
+      color: #7a9ab0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.2rem;
+      padding: 1rem 2rem 2rem;
+    }
+
+    .card {
+      background: #141d27;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #1e2e3e;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #97ce4c;
+    }
+
+    .card img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-info {
+      padding: 0.75rem;
+    }
+
+    .card-info h3 {
+      font-size: 0.95rem;
+      color: #fff;
+      margin-bottom: 0.3rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: #a0b4c0;
+    }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+
+    .dot.alive  { background: #97ce4c; }
+    .dot.dead   { background: #e74c3c; }
+    .dot.unknown { background: #aaa; }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 2rem 2rem;
+    }
+
+    .pagination button {
+      padding: 0.5rem 1.2rem;
+      border-radius: 8px;
+      border: 1px solid #2e3f50;
+      background: #1c2b3a;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+
+    .pagination button:hover:not(:disabled) { background: #2e3f50; }
+    .pagination button:disabled { opacity: 0.3; cursor: default; }
+    .pagination span { color: #7a9ab0; font-size: 0.9rem; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #141d27;
+      border: 1px solid #2e3f50;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 480px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .modal img {
+      width: 100%;
+      max-height: 280px;
+      object-fit: cover;
+    }
+
+    .modal-body { padding: 1.2rem 1.5rem 1.5rem; }
+
+    .modal-body h2 {
+      font-size: 1.3rem;
+      color: #97ce4c;
+      margin-bottom: 0.8rem;
+    }
+
+    .modal-body p {
+      font-size: 0.9rem;
+      color: #a0b4c0;
+      margin-bottom: 0.4rem;
+    }
+
+    .modal-body p span { color: #fff; }
+
+    .modal-close {
+      position: absolute;
+      top: 0.75rem; right: 1rem;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .empty {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 3rem;
+      color: #5a7a8a;
+    }
+
+    .loader {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 3rem;
+      color: #97ce4c;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🧪 Rick & Morty Explorer</h1>
+  </header>
+
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Buscar personaje..." />
+    <button onclick="search()">Buscar</button>
+    <button onclick="clearSearch()" style="background:#1c2b3a;color:#fff;border:1px solid #2e3f50;">Limpiar</button>
+  </div>
+
+  <div class="info-bar" id="infoBar"></div>
+
+  <div class="grid" id="grid">
+    <div class="loader">Cargando personajes...</div>
+  </div>
+
+  <div class="pagination">
+    <button id="prevBtn" onclick="changePage(-1)" disabled>← Anterior</button>
+    <span id="pageInfo">Página 1</span>
+    <button id="nextBtn" onclick="changePage(1)">Siguiente →</button>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal" onclick="closeModal(event)">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModalDirect()">×</button>
+      <img id="modalImg" src="" alt="" />
+      <div class="modal-body">
+        <h2 id="modalName"></h2>
+        <p>Estado: <span id="modalStatus"></span></p>
+        <p>Especie: <span id="modalSpecies"></span></p>
+        <p>Género: <span id="modalGender"></span></p>
+        <p>Origen: <span id="modalOrigin"></span></p>
+        <p>Última ubicación: <span id="modalLocation"></span></p>
+        <p>Episodios: <span id="modalEpisodes"></span></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentPage = 1;
+    let totalPages = 1;
+    let currentName = '';
+
+    async function fetchCharacters(page = 1, name = '') {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '<div class="loader">Cargando...</div>';
+
+      try {
+        const params = new URLSearchParams({ page, name });
+        const res = await fetch(`/api/characters?${params}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          grid.innerHTML = `<div class="empty">😕 ${data.error || 'Sin resultados'}</div>`;
+          document.getElementById('infoBar').textContent = '';
+          document.getElementById('prevBtn').disabled = true;
+          document.getElementById('nextBtn').disabled = true;
+          return;
+        }
+
+        totalPages = data.info.pages;
+        currentPage = page;
+
+        document.getElementById('pageInfo').textContent = `Página ${currentPage} de ${totalPages}`;
+        document.getElementById('prevBtn').disabled = currentPage <= 1;
+        document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+        document.getElementById('infoBar').textContent = `${data.info.count} personajes encontrados`;
+
+        renderCards(data.results);
+      } catch (err) {
+        grid.innerHTML = '<div class="empty">⚠️ Error al conectar con el servidor</div>';
+      }
+    }
+
+    function renderCards(characters) {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = characters.map(c => `
+        <div class="card" onclick="openModal(${c.id})">
+          <img src="${c.image}" alt="${c.name}" loading="lazy" />
+          <div class="card-info">
+            <h3>${c.name}</h3>
+            <div class="status">
+              <span class="dot ${c.status.toLowerCase()}"></span>
+              ${c.status} — ${c.species}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function openModal(id) {
+      const res = await fetch(`/api/character/${id}`);
+      const c = await res.json();
+
+      document.getElementById('modalImg').src = c.image;
+      document.getElementById('modalName').textContent = c.name;
+      document.getElementById('modalStatus').textContent = c.status;
+      document.getElementById('modalSpecies').textContent = c.species;
+      document.getElementById('modalGender').textContent = c.gender;
+      document.getElementById('modalOrigin').textContent = c.origin.name;
+      document.getElementById('modalLocation').textContent = c.location.name;
+      document.getElementById('modalEpisodes').textContent = c.episode.length;
+
+      document.getElementById('modal').classList.add('open');
+    }
+
+    function closeModal(e) {
+      if (e.target === document.getElementById('modal')) closeModalDirect();
+    }
+
+    function closeModalDirect() {
+      document.getElementById('modal').classList.remove('open');
+    }
+
+    function search() {
+      currentName = document.getElementById('searchInput').value.trim();
+      fetchCharacters(1, currentName);
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      currentName = '';
+      fetchCharacters(1, '');
+    }
+
+    function changePage(dir) {
+      const newPage = currentPage + dir;
+      if (newPage >= 1 && newPage <= totalPages) {
+        fetchCharacters(newPage, currentName);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // Buscar con Enter
+    document.getElementById('searchInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') search();
+    });
+
+    // Carga inicial
+    fetchCharacters(1);
+  </script>
+</body>
+</html>
